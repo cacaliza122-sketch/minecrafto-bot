@@ -55,12 +55,12 @@ public final class HomelanderHero implements Hero {
 
 	@Override
 	public void applyPassives(Player player) {
-		HeroAttributes.applyHomelander(player);
+		HeroAttributes.HOMELANDER.apply(player);
 	}
 
 	@Override
 	public void removePassives(Player player) {
-		HeroAttributes.removeHomelander(player);
+		HeroAttributes.HOMELANDER.remove(player);
 	}
 
 	@Override
