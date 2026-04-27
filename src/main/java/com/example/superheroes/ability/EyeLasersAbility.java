@@ -28,9 +28,10 @@ import net.minecraft.world.phys.Vec3;
 
 public final class EyeLasersAbility implements Ability {
 	private static final double RANGE = 64.0;
-	private static final float MIN_DPS = 4.0f;
-	private static final float MAX_DPS = 12.0f;
+	private static final float MIN_DPS = 5.0f;
+	private static final float MAX_DPS = 15.0f;
 	private static final float MADNESS_DAMAGE_MUL = 3.0f;
+	private static final double CHEST_FRACTION = 0.7;
 
 	@Override
 	public ResourceLocation getId() {
@@ -44,12 +45,12 @@ public final class EyeLasersAbility implements Ability {
 
 	@Override
 	public float costOnActivate() {
-		return 2f;
+		return 2.5f;
 	}
 
 	@Override
 	public float costPerTick() {
-		return 0.6f;
+		return 0.75f;
 	}
 
 	@Override
@@ -88,7 +89,7 @@ public final class EyeLasersAbility implements Ability {
 		if (hit != null) {
 			LivingEntity target = (LivingEntity) hit.getEntity();
 			target.hurt(ModDamageTypes.eyeLaser(level, player), damage);
-			actualEnd = hit.getLocation();
+			actualEnd = new Vec3(target.getX(), target.getY() + target.getBbHeight() * CHEST_FRACTION, target.getZ());
 			level.sendParticles(ModParticles.LASER_SPARK,
 					actualEnd.x, actualEnd.y, actualEnd.z,
 					3, 0.10, 0.10, 0.10, 0.04);
