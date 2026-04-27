@@ -2,6 +2,7 @@ package com.example.superheroes.client;
 
 import com.example.superheroes.client.hud.RadialMenuHud;
 import com.example.superheroes.client.hud.ResourceBarHud;
+import com.example.superheroes.client.hud.LaserCrosshairHud;
 import com.example.superheroes.client.hud.LowResourceVignetteHud;
 import com.example.superheroes.client.hud.ScreenFlashHud;
 import com.example.superheroes.client.network.ClientNetworking;
@@ -43,6 +44,7 @@ public class SuperheroesClient implements ClientModInitializer {
 			LowResourceVignetteHud.render(graphics, tracker);
 			ResourceBarHud.render(graphics, tracker);
 			RadialMenuHud.render(graphics, tracker);
+			LaserCrosshairHud.render(graphics, tracker);
 			ScreenFlashHud.render(graphics, tracker);
 		});
 

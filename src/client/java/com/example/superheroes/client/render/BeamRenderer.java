@@ -33,25 +33,33 @@ public final class BeamRenderer {
 		Vec3 beamDir = beam.scale(1.0 / len);
 		Vec3 mid = start.add(end).scale(0.5);
 		Vec3 toCam = cam.subtract(mid);
-		Vec3 side = beamDir.cross(toCam);
-		if (side.length() < 1e-3) {
-			side = beamDir.cross(new Vec3(0, 1, 0));
-			if (side.length() < 1e-3) {
-				side = new Vec3(1, 0, 0);
+		Vec3 side1 = beamDir.cross(toCam);
+		if (side1.length() < 1e-3) {
+			side1 = beamDir.cross(new Vec3(0, 1, 0));
+			if (side1.length() < 1e-3) {
+				side1 = new Vec3(1, 0, 0);
 			}
 		}
-		side = side.normalize();
+		side1 = side1.normalize();
+		Vec3 side2 = beamDir.cross(side1).normalize();
 
 		long t = System.currentTimeMillis();
 		float pulse = 0.92f + 0.08f * (float) Math.sin(t * 0.018);
 		float a = intensity;
 
-		drawQuadDouble(buf, matrix, start, end, side, 0.22 * pulse, 1f, 0.18f, 0.10f, 0.55f * a);
-		drawQuadDouble(buf, matrix, start, end, side, 0.13 * pulse, 1f, 0.55f, 0.28f, 0.85f * a);
-		drawQuadDouble(buf, matrix, start, end, side, 0.06 * pulse, 1f, 0.95f, 0.85f, 1f * a);
-		drawQuadDouble(buf, matrix, start, end, side, 0.022 * pulse, 1f, 1f, 1f, 1f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.22 * pulse, 1f, 0.18f, 0.10f, 0.55f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.13 * pulse, 1f, 0.55f, 0.28f, 0.85f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.06 * pulse, 1f, 0.95f, 0.85f, 1f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.022 * pulse, 1f, 1f, 1f, 1f * a);
 
 		ps.popPose();
+	}
+
+	private static void drawCrossLayer(VertexConsumer buf, Matrix4f matrix,
+			Vec3 a, Vec3 b, Vec3 side1, Vec3 side2, double width,
+			float r, float g, float bl, float alpha) {
+		drawQuadDouble(buf, matrix, a, b, side1, width, r, g, bl, alpha);
+		drawQuadDouble(buf, matrix, a, b, side2, width, r, g, bl, alpha);
 	}
 
 	private static void drawQuadDouble(VertexConsumer buf, Matrix4f matrix,
