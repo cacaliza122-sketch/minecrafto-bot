@@ -1,0 +1,113 @@
+package com.example.superheroes.transform;
+
+import com.example.superheroes.ability.Ability;
+import com.example.superheroes.ability.AbilityRegistry;
+import com.example.superheroes.attachment.ModAttachments;
+import com.example.superheroes.hero.Hero;
+import com.example.superheroes.hero.Heroes;
+import com.example.superheroes.network.ModNetworking;
+import com.example.superheroes.particle.ModParticles;
+import com.example.superheroes.resource.ResourceKind;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+public final class HeroTransformService {
+	private HeroTransformService() {
+	}
+
+	public static boolean transform(ServerPlayer player, ResourceLocation heroId) {
+		Hero hero = Heroes.get(heroId);
+		if (hero == null) {
+			return false;
+		}
+		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		if (data.hasHero() && heroId.equals(data.heroId())) {
+			return false;
+		}
+		if (data.hasHero()) {
+			Hero current = Heroes.get(data.heroId());
+			if (current != null) {
+				current.removePassives(player);
+				deactivateAll(player, data);
+			}
+		}
+		Map<ResourceLocation, ResourceKind> bindings = new HashMap<>(data.abilityBindings());
+		for (ResourceLocation abilityId : hero.getAbilities()) {
+			bindings.putIfAbsent(abilityId, hero.getDefaultBinding(abilityId));
+		}
+		HeroData updated = new HeroData(
+				Optional.of(heroId),
+				hero.getEnergyMax(),
+				Math.min(data.mana(), hero.getManaMax()),
+				bindings,
+				java.util.Set.of()
+		);
+		player.setAttached(ModAttachments.HERO_DATA, updated);
+		hero.applyPassives(player);
+		ModNetworking.syncHeroData(player, updated);
+		playTransformFx(player, true);
+		return true;
+	}
+
+	public static boolean untransform(ServerPlayer player) {
+		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		if (!data.hasHero()) {
+			return false;
+		}
+		Hero current = Heroes.get(data.heroId());
+		if (current != null) {
+			current.removePassives(player);
+			deactivateAll(player, data);
+		}
+		HeroData updated = data.withHero(null).withResources(0f, 0f).clearActive();
+		player.setAttached(ModAttachments.HERO_DATA, updated);
+		ModNetworking.syncHeroData(player, updated);
+		playTransformFx(player, false);
+		return true;
+	}
+
+	private static void playTransformFx(ServerPlayer player, boolean activate) {
+		ServerLevel level = player.serverLevel();
+		if (activate) {
+			level.sendParticles(ModParticles.TRANSFORM_SPARK,
+					player.getX(), player.getY() + 0.5, player.getZ(),
+					60, 0.8, 0.8, 0.8, 0.15);
+			level.playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1f, 1f);
+		} else {
+			level.sendParticles(ParticleTypes.SMOKE,
+					player.getX(), player.getY() + 0.5, player.getZ(),
+					30, 0.5, 0.5, 0.5, 0.05);
+			level.playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1f, 1f);
+		}
+	}
+
+	public static void onPlayerJoin(ServerPlayer player) {
+		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		if (data.hasHero()) {
+			Hero hero = Heroes.get(data.heroId());
+			if (hero != null) {
+				hero.applyPassives(player);
+			}
+		}
+		ModNetworking.syncHeroData(player, data);
+	}
+
+	private static void deactivateAll(ServerPlayer player, HeroData data) {
+		for (ResourceLocation activeId : data.activeAbilities()) {
+			Ability ability = AbilityRegistry.get(activeId);
+			if (ability != null) {
+				ability.onDeactivate(player);
+			}
+		}
+	}
+}
