@@ -1,6 +1,7 @@
 package com.example.superheroes.command;
 
 import com.example.superheroes.attachment.ModAttachments;
+import com.example.superheroes.effect.LightningEffects;
 import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
@@ -44,7 +45,9 @@ public final class SuperheroesCommands {
 						.then(Commands.literal("abilities")
 								.executes(SuperheroesCommands::listAbilities))
 						.then(Commands.literal("info")
-								.executes(SuperheroesCommands::info))));
+								.executes(SuperheroesCommands::info))
+						.then(Commands.literal("lightning")
+								.executes(SuperheroesCommands::summonLightning))));
 	}
 
 	private static int setHero(CommandContext<CommandSourceStack> ctx) {
@@ -158,6 +161,27 @@ public final class SuperheroesCommands {
 		ctx.getSource().sendSuccess(() -> Component.translatable("commands.superheroes.info",
 				heroId, String.format("%.1f", data.energy()), String.format("%.1f", data.mana()),
 				data.activeAbilities().size()), false);
+		return 1;
+	}
+
+	private static int summonLightning(CommandContext<CommandSourceStack> ctx) {
+		ServerPlayer player = playerOrNull(ctx);
+		if (player == null) {
+			return 0;
+		}
+		net.minecraft.world.phys.Vec3 eye = player.getEyePosition();
+		net.minecraft.world.phys.Vec3 dir = player.getViewVector(1f);
+		net.minecraft.world.phys.Vec3 end = eye.add(dir.scale(64.0));
+		net.minecraft.world.phys.BlockHitResult hit = player.serverLevel().clip(new net.minecraft.world.level.ClipContext(
+				eye, end,
+				net.minecraft.world.level.ClipContext.Block.COLLIDER,
+				net.minecraft.world.level.ClipContext.Fluid.NONE,
+				player));
+		net.minecraft.world.phys.Vec3 pos = hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK
+				? hit.getLocation()
+				: end;
+		LightningEffects.summonRandom(player.serverLevel(), pos, player);
+		ctx.getSource().sendSuccess(() -> Component.literal("Lightning summoned at " + String.format("%.1f %.1f %.1f", pos.x, pos.y, pos.z)), false);
 		return 1;
 	}
 
