@@ -47,7 +47,13 @@ public final class LocalLaserOverlay {
 		EntityHitResult hit = ProjectileUtil.getEntityHitResult(
 				level, player, eye, entitySearchEnd, box,
 				e -> e instanceof LivingEntity && e.isAlive() && e != player && !e.isSpectator());
-		Vec3 actualEnd = hit != null ? hit.getLocation() : entitySearchEnd;
+		Vec3 actualEnd;
+		if (hit != null) {
+			LivingEntity target = (LivingEntity) hit.getEntity();
+			actualEnd = new Vec3(target.getX(), target.getY() + target.getBbHeight() * 0.7, target.getZ());
+		} else {
+			actualEnd = entitySearchEnd;
+		}
 		Vec3 right = dir.cross(new Vec3(0, 1, 0));
 		if (right.lengthSqr() < 1e-6) {
 			right = new Vec3(1, 0, 0);
