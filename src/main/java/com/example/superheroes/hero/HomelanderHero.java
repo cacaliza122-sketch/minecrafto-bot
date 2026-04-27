@@ -6,6 +6,8 @@ import com.example.superheroes.physics.ShockwaveUtil;
 import com.example.superheroes.resource.ResourceKind;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -58,11 +60,13 @@ public final class HomelanderHero implements Hero {
 	@Override
 	public void applyPassives(Player player) {
 		HeroAttributes.HOMELANDER.apply(player);
+		player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, -1, 0, true, false, true));
 	}
 
 	@Override
 	public void removePassives(Player player) {
 		HeroAttributes.HOMELANDER.remove(player);
+		player.removeEffect(MobEffects.REGENERATION);
 	}
 
 	@Override
