@@ -32,7 +32,15 @@ public final class FlightAbility implements Ability {
 		a.mayfly = true;
 		a.flying = true;
 		player.onUpdateAbilities();
+		player.startFallFlying();
 		return true;
+	}
+
+	@Override
+	public void onTickActive(ServerPlayer player) {
+		if (!player.isFallFlying()) {
+			player.startFallFlying();
+		}
 	}
 
 	@Override
@@ -43,5 +51,6 @@ public final class FlightAbility implements Ability {
 			a.mayfly = false;
 		}
 		player.onUpdateAbilities();
+		player.stopFallFlying();
 	}
 }
