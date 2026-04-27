@@ -2,6 +2,7 @@ package com.example.superheroes.hero;
 
 import com.example.superheroes.resource.ResourceKind;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -34,5 +35,8 @@ public interface Hero {
 	@Nullable
 	default ResourceLocation getSkinTexture() {
 		return null;
+	}
+
+	default void onLanded(ServerPlayer player, float fallDistance) {
 	}
 }

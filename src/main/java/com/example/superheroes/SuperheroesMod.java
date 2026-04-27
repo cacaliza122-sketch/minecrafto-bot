@@ -11,7 +11,9 @@ import com.example.superheroes.particle.ModParticles;
 import com.example.superheroes.resource.ResourceController;
 import com.example.superheroes.transform.HeroTransformService;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,12 @@ public class SuperheroesMod implements ModInitializer {
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			HeroTransformService.onPlayerJoin(handler.getPlayer());
+		});
+
+		EntityTrackingEvents.START_TRACKING.register((tracked, observer) -> {
+			if (tracked instanceof ServerPlayer trackedPlayer) {
+				ModNetworking.sendRemoteHeroSkinTo(observer, trackedPlayer);
+			}
 		});
 
 		LOGGER.info("Superheroes mod initialized");

@@ -2,8 +2,10 @@ package com.example.superheroes.hero;
 
 import com.example.superheroes.ModId;
 import com.example.superheroes.ability.AbilityIds;
+import com.example.superheroes.physics.ShockwaveUtil;
 import com.example.superheroes.resource.ResourceKind;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -71,5 +73,16 @@ public final class HomelanderHero implements Hero {
 	@Override
 	public ResourceLocation getSkinTexture() {
 		return SKIN;
+	}
+
+	@Override
+	public void onLanded(ServerPlayer player, float fallDistance) {
+		if (fallDistance < 4.0f) {
+			return;
+		}
+		float scaled = Math.min(fallDistance, 60.0f);
+		double radius = 3.0 + scaled * 0.45;
+		float damage = 4.0f + scaled * 0.4f;
+		ShockwaveUtil.detonate(player, player.position(), radius, damage, false);
 	}
 }
