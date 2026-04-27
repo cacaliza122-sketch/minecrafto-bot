@@ -16,8 +16,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -104,14 +102,11 @@ public final class MadnessAftermathController {
 					SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.5f + t * 0.5f, 0.8f + t * 1.4f);
 		}
 		if (player.tickCount % 25 == 0 && t > 0.3f) {
-			LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
-			if (bolt != null) {
-				double angle = level.getRandom().nextDouble() * Math.PI * 2.0;
-				double r = 4.0 + level.getRandom().nextDouble() * 6.0;
-				bolt.moveTo(cx + Math.cos(angle) * r, cy - 1.0, cz + Math.sin(angle) * r);
-				bolt.setVisualOnly(true);
-				level.addFreshEntity(bolt);
-			}
+			double angle = level.getRandom().nextDouble() * Math.PI * 2.0;
+			double r = 4.0 + level.getRandom().nextDouble() * 6.0;
+			LightningEffects.summonRandom(level,
+					new Vec3(cx + Math.cos(angle) * r, cy - 1.0, cz + Math.sin(angle) * r),
+					player);
 		}
 		if (remaining <= 1) {
 			detonateSun(player);
@@ -149,14 +144,11 @@ public final class MadnessAftermathController {
 			}
 		}
 		for (int i = 0; i < 6; i++) {
-			LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
-			if (bolt != null) {
-				double angle = i * (Math.PI / 3.0);
-				double rd = 5.0 + level.getRandom().nextDouble() * 4.0;
-				bolt.moveTo(x + Math.cos(angle) * rd, y, z + Math.sin(angle) * rd);
-				bolt.setVisualOnly(true);
-				level.addFreshEntity(bolt);
-			}
+			double angle = i * (Math.PI / 3.0);
+			double rd = 5.0 + level.getRandom().nextDouble() * 4.0;
+			LightningEffects.summonRandom(level,
+					new Vec3(x + Math.cos(angle) * rd, y, z + Math.sin(angle) * rd),
+					player);
 		}
 		level.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 4.0f, 0.4f);
 		level.playSound(null, x, y, z, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 3.0f, 0.7f);
