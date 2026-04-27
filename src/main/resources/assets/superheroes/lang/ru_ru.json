@@ -1,7 +1,13 @@
 {
 	"itemGroup.superheroes": "Супергерои",
 	"item.superheroes.homelander_suit": "Костюм Хоумлендера",
+	"item.superheroes.homelander_suit.lore.line1": "«Я сильнее всех на этой планете.»",
+	"item.superheroes.homelander_suit.lore.line2": "Vought International — Семёрка",
+	"item.superheroes.homelander_suit.lore.usage": "▶ ПКМ — превратиться",
+	"item.superheroes.homelander_suit.lore.untransform": "▶ Shift + ПКМ — вернуть форму",
 	"item.superheroes.compound_v": "Состав V",
+	"item.superheroes.compound_v.lore.line1": "Экспериментальная сыворотка. Восполняет ману.",
+	"item.superheroes.compound_v.lore.usage": "▶ ПКМ в форме героя — +50 маны",
 	"key.categories.superheroes": "Супергерои",
 	"key.superheroes.radial": "Меню способностей",
 	"key.superheroes.bindings": "Привязки ресурсов",

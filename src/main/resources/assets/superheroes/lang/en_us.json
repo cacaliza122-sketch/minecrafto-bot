@@ -1,7 +1,13 @@
 {
 	"itemGroup.superheroes": "Superheroes",
 	"item.superheroes.homelander_suit": "Homelander Suit",
+	"item.superheroes.homelander_suit.lore.line1": "\"There is no one stronger than me.\"",
+	"item.superheroes.homelander_suit.lore.line2": "Vought International — The Seven",
+	"item.superheroes.homelander_suit.lore.usage": "▶ Right-click — Transform",
+	"item.superheroes.homelander_suit.lore.untransform": "▶ Shift + Right-click — Revert",
 	"item.superheroes.compound_v": "Compound V",
+	"item.superheroes.compound_v.lore.line1": "An experimental serum. Replenishes mana.",
+	"item.superheroes.compound_v.lore.usage": "▶ Right-click while transformed — +50 Mana",
 	"key.categories.superheroes": "Superheroes",
 	"key.superheroes.radial": "Open Ability Wheel",
 	"key.superheroes.bindings": "Resource Bindings",
