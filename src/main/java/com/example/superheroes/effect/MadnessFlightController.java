@@ -15,18 +15,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public final class MadnessFlightController {
-	private static final double MIN_SPEED_FOR_BREAK = 0.05;
 	private static final float HARDNESS_LIMIT = 20.0f;
-	private static final int CHECKS_PER_TICK = 28;
+	private static final int CHECKS_PER_SLICE = 22;
 	private static final int JITTER_RADIUS = 4;
 	private static final double JAGGED_SPHERE_RADIUS_SQ = 9.0;
-	private static final float SKIP_PROBABILITY = 0.32f;
+	private static final float SKIP_PROBABILITY = 0.28f;
+	private static final double FEET_PROTECT_RADIUS_XZ = 1.6;
+	private static final double FEET_PROTECT_DEPTH = 0.5;
+	private static final double[] AHEAD_DISTANCES = { 1.2, 2.4, 3.6, 4.8 };
 
 	private MadnessFlightController() {
 	}
 
 	public static void init() {
-		ServerTickEvents.END_SERVER_TICK.register(server -> {
+		ServerTickEvents.START_SERVER_TICK.register(server -> {
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				tick(player);
 			}
@@ -42,33 +44,44 @@ public final class MadnessFlightController {
 			return;
 		}
 		Vec3 motion = player.getDeltaMovement();
-		double speedSq = motion.lengthSqr();
-		Vec3 dir = speedSq > MIN_SPEED_FOR_BREAK * MIN_SPEED_FOR_BREAK
-				? motion.normalize()
-				: player.getViewVector(1f);
+		Vec3 view = player.getViewVector(1f);
+		Vec3 motionH = new Vec3(motion.x, 0, motion.z);
+		Vec3 viewH = new Vec3(view.x, 0, view.z);
+		Vec3 forwardH;
+		if (motionH.lengthSqr() > 0.01) {
+			forwardH = motionH.normalize();
+		} else if (viewH.lengthSqr() > 1e-6) {
+			forwardH = viewH.normalize();
+		} else {
+			return;
+		}
+		Vec3 dir = motion.lengthSqr() > 0.01 ? motion.normalize() : view;
+
 		ServerLevel level = player.serverLevel();
-		Vec3 head = player.position().add(0, player.getBbHeight() * 0.5, 0);
+		Vec3 chest = player.position().add(0, player.getBbHeight() * 0.6, 0);
+		Vec3 playerPos = player.position();
 		boolean broke = false;
-		for (int s = 0; s <= 2; s++) {
-			Vec3 ahead = head.add(dir.scale(0.8 + s * 1.2));
+		for (double d : AHEAD_DISTANCES) {
+			Vec3 ahead = chest.add(dir.scale(d));
 			BlockPos center = BlockPos.containing(ahead);
-			broke |= breakJagged(level, player, center);
+			broke |= breakJagged(level, player, center, playerPos, forwardH);
 		}
 		if (broke) {
 			level.sendParticles(ParticleTypes.EXPLOSION,
 					player.getX() + dir.x, player.getY() + 1.0 + dir.y, player.getZ() + dir.z,
 					1, 0.2, 0.2, 0.2, 0.0);
-			if (player.tickCount % 5 == 0) {
+			if (player.tickCount % 6 == 0) {
 				level.playSound(null, player.getX(), player.getY(), player.getZ(),
-						SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.5f, 1.7f);
+						SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.45f, 1.7f);
 			}
 		}
 	}
 
-	private static boolean breakJagged(ServerLevel level, ServerPlayer player, BlockPos center) {
+	private static boolean breakJagged(ServerLevel level, ServerPlayer player, BlockPos center, Vec3 playerPos, Vec3 forwardH) {
 		RandomSource rand = level.getRandom();
 		boolean broke = false;
-		for (int i = 0; i < CHECKS_PER_TICK; i++) {
+		double feetY = playerPos.y;
+		for (int i = 0; i < CHECKS_PER_SLICE; i++) {
 			int dx = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
 			int dy = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
 			int dz = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
@@ -79,6 +92,17 @@ public final class MadnessFlightController {
 				continue;
 			}
 			BlockPos pos = center.offset(dx, dy, dz);
+			double bx = pos.getX() + 0.5 - playerPos.x;
+			double by = pos.getY() + 0.5 - feetY;
+			double bz = pos.getZ() + 0.5 - playerPos.z;
+			double horizontalDot = bx * forwardH.x + bz * forwardH.z;
+			if (horizontalDot <= 0.2) {
+				continue;
+			}
+			double horizontalDist = Math.sqrt(bx * bx + bz * bz);
+			if (by < -FEET_PROTECT_DEPTH && horizontalDist < FEET_PROTECT_RADIUS_XZ) {
+				continue;
+			}
 			BlockState state = level.getBlockState(pos);
 			if (state.isAir() || state.liquid()) {
 				continue;
