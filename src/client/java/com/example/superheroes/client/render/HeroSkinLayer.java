@@ -1,6 +1,7 @@
 package com.example.superheroes.client.render;
 
 import com.example.superheroes.client.ClientHeroState;
+import com.example.superheroes.client.RemoteHeroSkins;
 import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -24,13 +25,19 @@ public class HeroSkinLayer extends RenderLayer<AbstractClientPlayer, PlayerModel
 	public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
 			AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
 			float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-		if (player != Minecraft.getInstance().player) {
-			return;
+		ResourceLocation heroId;
+		if (player == Minecraft.getInstance().player) {
+			if (!ClientHeroState.data().hasHero()) {
+				return;
+			}
+			heroId = ClientHeroState.data().heroId();
+		} else {
+			heroId = RemoteHeroSkins.get(player.getUUID());
+			if (heroId == null) {
+				return;
+			}
 		}
-		if (!ClientHeroState.data().hasHero()) {
-			return;
-		}
-		Hero hero = Heroes.get(ClientHeroState.data().heroId());
+		Hero hero = Heroes.get(heroId);
 		if (hero == null) {
 			return;
 		}

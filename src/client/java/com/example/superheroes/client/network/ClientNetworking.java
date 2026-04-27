@@ -2,10 +2,14 @@ package com.example.superheroes.client.network;
 
 import com.example.superheroes.attachment.ModAttachments;
 import com.example.superheroes.client.ClientHeroState;
+import com.example.superheroes.client.RemoteHeroSkins;
+import com.example.superheroes.client.fx.ScreenShakeManager;
 import com.example.superheroes.client.render.LaserBeamRenderer;
 import com.example.superheroes.network.HeroDataSyncS2CPayload;
 import com.example.superheroes.network.LaserFiredS2CPayload;
+import com.example.superheroes.network.RemoteHeroSkinS2CPayload;
 import com.example.superheroes.network.ResourceUpdateS2CPayload;
+import com.example.superheroes.network.ScreenShakeS2CPayload;
 import com.example.superheroes.transform.HeroData;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
@@ -36,5 +40,11 @@ public final class ClientNetworking {
 
 		ClientPlayNetworking.registerGlobalReceiver(LaserFiredS2CPayload.TYPE, (payload, context) ->
 				context.client().execute(() -> LaserBeamRenderer.add(payload.start(), payload.end())));
+
+		ClientPlayNetworking.registerGlobalReceiver(ScreenShakeS2CPayload.TYPE, (payload, context) ->
+				context.client().execute(() -> ScreenShakeManager.shake(payload.intensity(), payload.durationTicks())));
+
+		ClientPlayNetworking.registerGlobalReceiver(RemoteHeroSkinS2CPayload.TYPE, (payload, context) ->
+				context.client().execute(() -> RemoteHeroSkins.put(payload.playerId(), payload.heroId().orElse(null))));
 	}
 }

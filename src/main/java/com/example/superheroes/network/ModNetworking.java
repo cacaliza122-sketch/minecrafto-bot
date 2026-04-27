@@ -2,12 +2,17 @@ package com.example.superheroes.network;
 
 import com.example.superheroes.ability.AbilityRouter;
 import com.example.superheroes.attachment.ModAttachments;
+import com.example.superheroes.hero.Hero;
+import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.transform.HeroData;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Optional;
 
 public final class ModNetworking {
 	private ModNetworking() {
@@ -21,6 +26,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(ResourceUpdateS2CPayload.TYPE, ResourceUpdateS2CPayload.STREAM_CODEC);
 		PayloadTypeRegistry.playS2C().register(HeroDataSyncS2CPayload.TYPE, HeroDataSyncS2CPayload.STREAM_CODEC);
 		PayloadTypeRegistry.playS2C().register(LaserFiredS2CPayload.TYPE, LaserFiredS2CPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(ScreenShakeS2CPayload.TYPE, ScreenShakeS2CPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(RemoteHeroSkinS2CPayload.TYPE, RemoteHeroSkinS2CPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(ActivateAbilityC2SPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
@@ -47,6 +54,27 @@ public final class ModNetworking {
 	public static void syncHeroDataFromAttachment(ServerPlayer player) {
 		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
 		syncHeroData(player, data);
+	}
+
+	public static void broadcastRemoteHeroSkin(ServerPlayer player) {
+		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		Optional<ResourceLocation> heroId = Optional.ofNullable(data.heroId());
+		RemoteHeroSkinS2CPayload payload = new RemoteHeroSkinS2CPayload(player.getUUID(), heroId);
+		for (ServerPlayer observer : PlayerLookup.tracking(player)) {
+			if (observer != player) {
+				ServerPlayNetworking.send(observer, payload);
+			}
+		}
+	}
+
+	public static void sendRemoteHeroSkinTo(ServerPlayer observer, ServerPlayer tracked) {
+		HeroData data = tracked.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		Hero hero = data.hasHero() ? Heroes.get(data.heroId()) : null;
+		if (hero == null) {
+			return;
+		}
+		Optional<ResourceLocation> heroId = Optional.ofNullable(data.heroId());
+		ServerPlayNetworking.send(observer, new RemoteHeroSkinS2CPayload(tracked.getUUID(), heroId));
 	}
 
 	public static void broadcastLaser(ServerPlayer shooter, Vec3 start, Vec3 end) {

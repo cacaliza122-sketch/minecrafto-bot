@@ -4,7 +4,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"PlayerRendererMixin",
-		"LocalPlayerFlightMixin"
+		"LocalPlayerFlightMixin",
+		"CameraMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

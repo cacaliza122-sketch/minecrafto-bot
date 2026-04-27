@@ -2,9 +2,9 @@ package com.example.superheroes.client;
 
 import com.example.superheroes.client.hud.RadialMenuHud;
 import com.example.superheroes.client.hud.ResourceBarHud;
-import com.example.superheroes.client.hud.LaserCrosshairHud;
 import com.example.superheroes.client.hud.LowResourceVignetteHud;
 import com.example.superheroes.client.hud.ScreenFlashHud;
+import com.example.superheroes.client.fx.ScreenShakeManager;
 import com.example.superheroes.client.network.ClientNetworking;
 import com.example.superheroes.client.render.HeroSkinLayer;
 import com.example.superheroes.client.render.LaserBeamRenderer;
@@ -44,11 +44,11 @@ public class SuperheroesClient implements ClientModInitializer {
 			LowResourceVignetteHud.render(graphics, tracker);
 			ResourceBarHud.render(graphics, tracker);
 			RadialMenuHud.render(graphics, tracker);
-			LaserCrosshairHud.render(graphics, tracker);
 			ScreenFlashHud.render(graphics, tracker);
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			ScreenShakeManager.tick();
 			RadialMenuHud.clientTick(client);
 			while (ModKeys.BINDINGS.consumeClick()) {
 				if (client.player != null && ClientHeroState.data().hasHero()) {

@@ -62,6 +62,7 @@ public final class HeroTransformService {
 		hero.applyPassives(player);
 		player.refreshDimensions();
 		ModNetworking.syncHeroData(player, updated);
+		ModNetworking.broadcastRemoteHeroSkin(player);
 		playTransformFx(player, true);
 		markTransformed(player);
 		return true;
@@ -84,6 +85,7 @@ public final class HeroTransformService {
 		player.setAttached(ModAttachments.HERO_DATA, updated);
 		player.refreshDimensions();
 		ModNetworking.syncHeroData(player, updated);
+		ModNetworking.broadcastRemoteHeroSkin(player);
 		playTransformFx(player, false);
 		markTransformed(player);
 		return true;
