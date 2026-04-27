@@ -5,6 +5,8 @@ import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
 import com.example.superheroes.transform.HeroData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,13 +15,23 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+
+import java.util.List;
 
 public class CompoundVItem extends Item {
 	private static final float MANA_PER_USE = 50f;
 
 	public CompoundVItem(Properties properties) {
 		super(properties);
+	}
+
+	@Override
+	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+		tooltip.add(Component.translatable("item.superheroes.compound_v.lore.line1").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		tooltip.add(Component.empty());
+		tooltip.add(Component.translatable("item.superheroes.compound_v.lore.usage").withStyle(ChatFormatting.AQUA));
 	}
 
 	@Override
