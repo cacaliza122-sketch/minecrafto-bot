@@ -53,6 +53,10 @@ public final class EyeLasersAbility implements Ability {
 	@Override
 	public void onTickActive(ServerPlayer player) {
 		fireBeam(player);
+		if (player.tickCount % 6 == 0) {
+			player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.35f, 1.6f);
+		}
 	}
 
 	private static void fireBeam(ServerPlayer player) {

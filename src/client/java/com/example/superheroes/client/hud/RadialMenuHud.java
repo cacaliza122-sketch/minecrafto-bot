@@ -75,9 +75,9 @@ public final class RadialMenuHud {
 			selected = -1;
 			return;
 		}
-		double angle = Math.toDegrees(Math.atan2(dpitch, dyaw)) + 90.0;
-		angle = ((angle % 360.0) + 360.0) % 360.0;
 		float per = 360f / n;
+		double angle = Math.toDegrees(Math.atan2(dpitch, dyaw)) + 90.0 + per / 2.0;
+		angle = ((angle % 360.0) + 360.0) % 360.0;
 		selected = ((int) Math.floor(angle / per)) % n;
 	}
 
