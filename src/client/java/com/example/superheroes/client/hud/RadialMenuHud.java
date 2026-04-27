@@ -14,10 +14,20 @@ import java.util.List;
 
 public final class RadialMenuHud {
 	private static final float DEAD_ZONE = 5f;
-	private static final int ITEM_RADIUS = 72;
-	private static final int BACKPLATE_RADIUS = 96;
-	private static final int SLOT_WIDTH = 104;
-	private static final int SLOT_HEIGHT = 22;
+	private static final int ITEM_RADIUS = 110;
+	private static final int BACKPLATE_RADIUS = 104;
+	private static final int SLOT_MIN_WIDTH = 96;
+	private static final int SLOT_HEIGHT = 26;
+	private static final int SLOT_PADDING_X = 14;
+	private static final int CURSOR_RADIUS = 56;
+
+	private static final int COLOR_TEXT_IDLE = 0xFFEDEDF5;
+	private static final int COLOR_TEXT_ACTIVE = 0xFFFFF3B0;
+	private static final int COLOR_KEY_IDLE = 0xFF7C8499;
+	private static final int COLOR_KEY_ACTIVE = 0xFFFF4655;
+	private static final int COLOR_BORDER_IDLE = 0x55F2D16B;
+	private static final int COLOR_BORDER_ACTIVE = 0xFFFF4655;
+	private static final int COLOR_GLOW = 0x44FFD27A;
 
 	private static boolean open;
 	private static float startYaw;
@@ -65,9 +75,9 @@ public final class RadialMenuHud {
 			selected = -1;
 			return;
 		}
-		double angle = Math.toDegrees(Math.atan2(dpitch, dyaw)) + 90.0;
-		angle = ((angle % 360.0) + 360.0) % 360.0;
 		float per = 360f / n;
+		double angle = Math.toDegrees(Math.atan2(dpitch, dyaw)) + 90.0 + per / 2.0;
+		angle = ((angle % 360.0) + 360.0) % 360.0;
 		selected = ((int) Math.floor(angle / per)) % n;
 	}
 
@@ -102,32 +112,80 @@ public final class RadialMenuHud {
 		int cy = mc.getWindow().getGuiScaledHeight() / 2;
 		int n = abilities.size();
 		drawBackplate(graphics, cx, cy);
+		drawCursor(graphics, mc, cx, cy);
 		for (int i = 0; i < n; i++) {
 			double angle = (i * 2 * Math.PI / n) - Math.PI / 2;
 			int x = cx + (int) (Math.cos(angle) * ITEM_RADIUS);
 			int y = cy + (int) (Math.sin(angle) * ITEM_RADIUS);
 			ResourceLocation aid = abilities.get(i);
 			Component name = Component.translatable("ability." + aid.getNamespace() + "." + aid.getPath());
+			Component key = keyForSlot(i);
 			boolean active = i == selected;
-			drawSlot(graphics, x - SLOT_WIDTH / 2, y - SLOT_HEIGHT / 2, SLOT_WIDTH, SLOT_HEIGHT, active);
-			graphics.drawCenteredString(mc.font, name, x, y - 8, active ? 0xFFFFF3B0 : 0xFFEDEDF5);
-			graphics.drawCenteredString(mc.font, keyForSlot(i), x, y + 4, active ? 0xFFFF4655 : 0xFF7C8499);
+			int textWidth = mc.font.width(name);
+			int slotWidth = Math.max(SLOT_MIN_WIDTH, textWidth + SLOT_PADDING_X * 2);
+			int slotX = x - slotWidth / 2;
+			int slotY = y - SLOT_HEIGHT / 2;
+			drawSlot(graphics, slotX, slotY, slotWidth, SLOT_HEIGHT, active);
+			graphics.drawCenteredString(mc.font, name, x, y - 9, active ? COLOR_TEXT_ACTIVE : COLOR_TEXT_IDLE);
+			graphics.drawCenteredString(mc.font, key, x, y + 3, active ? COLOR_KEY_ACTIVE : COLOR_KEY_IDLE);
 		}
 	}
 
 	private static void drawBackplate(GuiGraphics graphics, int cx, int cy) {
-		graphics.fillGradient(cx - BACKPLATE_RADIUS, cy - BACKPLATE_RADIUS, cx + BACKPLATE_RADIUS, cy + BACKPLATE_RADIUS, 0x66101422, 0x22050710);
-		graphics.fill(cx - 28, cy - 28, cx + 28, cy + 28, 0xCC070810);
-		graphics.fill(cx - 34, cy - 1, cx + 34, cy + 1, 0x66F2D16B);
-		graphics.fill(cx - 1, cy - 34, cx + 1, cy + 34, 0x66F2D16B);
-		graphics.fill(cx - 20, cy - 20, cx + 20, cy + 20, 0xAA141722);
-		graphics.fill(cx - 2, cy - 2, cx + 2, cy + 2, 0xFFFF4655);
+		graphics.fillGradient(cx - BACKPLATE_RADIUS, cy - BACKPLATE_RADIUS,
+				cx + BACKPLATE_RADIUS, cy + BACKPLATE_RADIUS, 0x66101422, 0x22050710);
+		graphics.fill(cx - 30, cy - 30, cx + 30, cy + 30, 0xCC070810);
+		graphics.fill(cx - 30, cy - 30, cx + 30, cy - 29, COLOR_BORDER_IDLE);
+		graphics.fill(cx - 30, cy + 29, cx + 30, cy + 30, 0x66000000);
+		graphics.fill(cx - 30, cy - 30, cx - 29, cy + 30, COLOR_BORDER_IDLE);
+		graphics.fill(cx + 29, cy - 30, cx + 30, cy + 30, 0x55000000);
+	}
+
+	private static void drawCursor(GuiGraphics graphics, Minecraft mc, int cx, int cy) {
+		if (mc.player == null) {
+			return;
+		}
+		float dyaw = mc.player.getYRot() - startYaw;
+		float dpitch = mc.player.getXRot() - startPitch;
+		float magSq = dyaw * dyaw + dpitch * dpitch;
+		boolean inDeadZone = magSq < DEAD_ZONE * DEAD_ZONE;
+		if (inDeadZone) {
+			graphics.fill(cx - 2, cy - 2, cx + 3, cy + 3, 0xFFEDEDF5);
+			return;
+		}
+		double a = Math.atan2(dpitch, dyaw);
+		double r = CURSOR_RADIUS;
+		int px = cx + (int) Math.round(r * Math.cos(a));
+		int py = cy + (int) Math.round(r * Math.sin(a));
+		drawDottedLine(graphics, cx, cy, px, py, COLOR_GLOW);
+		graphics.fill(px - 6, py - 1, px + 7, py + 2, COLOR_BORDER_ACTIVE);
+		graphics.fill(px - 1, py - 6, px + 2, py + 7, COLOR_BORDER_ACTIVE);
+		graphics.fill(px - 3, py - 3, px + 4, py + 4, COLOR_TEXT_ACTIVE);
+	}
+
+	private static void drawDottedLine(GuiGraphics graphics, int x0, int y0, int x1, int y1, int color) {
+		int dx = x1 - x0;
+		int dy = y1 - y0;
+		int steps = Math.max(Math.abs(dx), Math.abs(dy));
+		if (steps == 0) {
+			return;
+		}
+		float fx = (float) dx / steps;
+		float fy = (float) dy / steps;
+		for (int i = 0; i < steps; i += 4) {
+			int px = x0 + Math.round(fx * i);
+			int py = y0 + Math.round(fy * i);
+			graphics.fill(px, py, px + 2, py + 2, color);
+		}
 	}
 
 	private static void drawSlot(GuiGraphics graphics, int x, int y, int width, int height, boolean selectedSlot) {
+		if (selectedSlot) {
+			graphics.fill(x - 2, y - 2, x + width + 2, y + height + 2, COLOR_GLOW);
+		}
 		int top = selectedSlot ? 0xF02A1620 : 0xD0141722;
 		int bottom = selectedSlot ? 0xE0140710 : 0xB0070810;
-		int border = selectedSlot ? 0xCCFF4655 : 0x55F2D16B;
+		int border = selectedSlot ? COLOR_BORDER_ACTIVE : COLOR_BORDER_IDLE;
 		graphics.fillGradient(x, y, x + width, y + height, top, bottom);
 		graphics.fill(x, y, x + width, y + 1, border);
 		graphics.fill(x, y + height - 1, x + width, y + height, 0x66000000);

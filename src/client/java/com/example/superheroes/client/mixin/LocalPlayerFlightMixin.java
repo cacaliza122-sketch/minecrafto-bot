@@ -45,8 +45,8 @@ public abstract class LocalPlayerFlightMixin {
 		double inputForwardY = -sinPitch;
 		double inputForwardZ = cosYaw * cosPitch;
 
-		double inputStrafeX = -cosYaw;
-		double inputStrafeZ = -sinYaw;
+		double inputStrafeX = cosYaw;
+		double inputStrafeZ = sinYaw;
 
 		double accelX = inputForwardX * forward + inputStrafeX * strafe;
 		double accelY = inputForwardY * forward;

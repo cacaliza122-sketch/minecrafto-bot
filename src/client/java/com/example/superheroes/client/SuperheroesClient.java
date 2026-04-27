@@ -7,6 +7,7 @@ import com.example.superheroes.client.hud.ScreenFlashHud;
 import com.example.superheroes.client.network.ClientNetworking;
 import com.example.superheroes.client.render.HeroSkinLayer;
 import com.example.superheroes.client.render.LaserBeamRenderer;
+import com.example.superheroes.client.render.LocalLaserOverlay;
 import com.example.superheroes.client.screen.BindingsScreen;
 import com.example.superheroes.network.ActivateAbilityC2SPayload;
 import com.example.superheroes.particle.ModParticles;
@@ -28,6 +29,7 @@ public class SuperheroesClient implements ClientModInitializer {
 		ModKeys.init();
 		ClientNetworking.init();
 		LaserBeamRenderer.register();
+		LocalLaserOverlay.register();
 		ParticleFactoryRegistry.getInstance().register(ModParticles.TRANSFORM_SPARK, EndRodParticle.Provider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.LASER_SPARK, EndRodParticle.Provider::new);
 
