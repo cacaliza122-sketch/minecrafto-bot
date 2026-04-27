@@ -18,14 +18,22 @@ import net.minecraft.sounds.SoundSource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.WeakHashMap;
 
 public final class HeroTransformService {
+	private static final int COOLDOWN_TICKS = 20;
+	private static final Map<UUID, Long> LAST_TRANSFORM_TICK = new WeakHashMap<>();
+
 	private HeroTransformService() {
 	}
 
 	public static boolean transform(ServerPlayer player, ResourceLocation heroId) {
 		Hero hero = Heroes.get(heroId);
 		if (hero == null) {
+			return false;
+		}
+		if (isOnCooldown(player)) {
 			return false;
 		}
 		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
@@ -52,12 +60,17 @@ public final class HeroTransformService {
 		);
 		player.setAttached(ModAttachments.HERO_DATA, updated);
 		hero.applyPassives(player);
+		player.refreshDimensions();
 		ModNetworking.syncHeroData(player, updated);
 		playTransformFx(player, true);
+		markTransformed(player);
 		return true;
 	}
 
 	public static boolean untransform(ServerPlayer player) {
+		if (isOnCooldown(player)) {
+			return false;
+		}
 		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
 		if (!data.hasHero()) {
 			return false;
@@ -69,9 +82,23 @@ public final class HeroTransformService {
 		}
 		HeroData updated = data.withHero(null).withResources(0f, 0f).clearActive();
 		player.setAttached(ModAttachments.HERO_DATA, updated);
+		player.refreshDimensions();
 		ModNetworking.syncHeroData(player, updated);
 		playTransformFx(player, false);
+		markTransformed(player);
 		return true;
+	}
+
+	private static boolean isOnCooldown(ServerPlayer player) {
+		Long last = LAST_TRANSFORM_TICK.get(player.getUUID());
+		if (last == null) {
+			return false;
+		}
+		return player.server.getTickCount() - last < COOLDOWN_TICKS;
+	}
+
+	private static void markTransformed(ServerPlayer player) {
+		LAST_TRANSFORM_TICK.put(player.getUUID(), (long) player.server.getTickCount());
 	}
 
 	private static void playTransformFx(ServerPlayer player, boolean activate) {
