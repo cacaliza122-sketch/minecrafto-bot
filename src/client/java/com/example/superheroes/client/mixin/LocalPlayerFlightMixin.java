@@ -2,6 +2,7 @@ package com.example.superheroes.client.mixin;
 
 import com.example.superheroes.ability.AbilityIds;
 import com.example.superheroes.client.ClientHeroState;
+import com.example.superheroes.transform.HeroData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
@@ -16,6 +17,7 @@ public abstract class LocalPlayerFlightMixin {
 	private static final double MAX_HORIZONTAL_SPEED = 1.5;
 	private static final double MAX_VERTICAL_SPEED = 1.0;
 	private static final double ACCEL = 0.12;
+	private static final double MIN_SPEED_MUL = 0.5;
 	private static final double FRICTION_HORIZONTAL = 0.92;
 	private static final double FRICTION_VERTICAL = 0.90;
 
@@ -25,9 +27,22 @@ public abstract class LocalPlayerFlightMixin {
 		if (!self.level().isClientSide || !(self instanceof LocalPlayer player)) {
 			return;
 		}
-		if (!ClientHeroState.data().isActive(AbilityIds.FLIGHT)) {
+		HeroData heroData = ClientHeroState.data();
+		if (!heroData.isActive(AbilityIds.FLIGHT)) {
 			return;
 		}
+
+		double speedMul;
+		float energyMax = ClientHeroState.energyMax();
+		if (energyMax <= 0f) {
+			speedMul = 1.0;
+		} else {
+			double frac = Math.max(0f, Math.min(1f, heroData.energy() / energyMax));
+			speedMul = MIN_SPEED_MUL + (1.0 - MIN_SPEED_MUL) * frac;
+		}
+		double maxHorizontal = MAX_HORIZONTAL_SPEED * speedMul;
+		double maxVertical = MAX_VERTICAL_SPEED * speedMul;
+		double accelMag = ACCEL * speedMul;
 
 		float forward = player.zza;
 		float strafe = player.xxa;
@@ -61,7 +76,7 @@ public abstract class LocalPlayerFlightMixin {
 
 		double inputMag = Math.sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
 		if (inputMag > 1e-4) {
-			double scale = ACCEL / Math.max(inputMag, 1.0);
+			double scale = accelMag / Math.max(inputMag, 1.0);
 			accelX *= scale;
 			accelY *= scale;
 			accelZ *= scale;
@@ -77,13 +92,13 @@ public abstract class LocalPlayerFlightMixin {
 		double mz = motion.z + accelZ;
 
 		double horizSq = mx * mx + mz * mz;
-		if (horizSq > MAX_HORIZONTAL_SPEED * MAX_HORIZONTAL_SPEED) {
-			double s = MAX_HORIZONTAL_SPEED / Math.sqrt(horizSq);
+		if (horizSq > maxHorizontal * maxHorizontal) {
+			double s = maxHorizontal / Math.sqrt(horizSq);
 			mx *= s;
 			mz *= s;
 		}
-		if (Math.abs(my) > MAX_VERTICAL_SPEED) {
-			my = Math.signum(my) * MAX_VERTICAL_SPEED;
+		if (Math.abs(my) > maxVertical) {
+			my = Math.signum(my) * maxVertical;
 		}
 
 		boolean noHorizInput = forward == 0 && strafe == 0;
