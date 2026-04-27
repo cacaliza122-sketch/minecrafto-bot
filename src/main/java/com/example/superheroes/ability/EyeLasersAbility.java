@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
 
 public final class EyeLasersAbility implements Ability {
 	private static final double RANGE = 64.0;
-	private static final float DAMAGE = 8f;
+	private static final float DAMAGE_PER_TICK = 0.5f;
 
 	@Override
 	public ResourceLocation getId() {
@@ -28,21 +28,34 @@ public final class EyeLasersAbility implements Ability {
 
 	@Override
 	public boolean isToggle() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public float costOnActivate() {
-		return 8f;
+		return 2f;
 	}
 
 	@Override
 	public float costPerTick() {
-		return 0f;
+		return 0.6f;
 	}
 
 	@Override
 	public boolean tryActivate(ServerPlayer player) {
+		ServerLevel level = player.serverLevel();
+		level.playSound(null, player.getX(), player.getY(), player.getZ(),
+				SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.6f, 1.8f);
+		fireBeam(player);
+		return true;
+	}
+
+	@Override
+	public void onTickActive(ServerPlayer player) {
+		fireBeam(player);
+	}
+
+	private static void fireBeam(ServerPlayer player) {
 		Vec3 eye = player.getEyePosition();
 		Vec3 dir = player.getViewVector(1f);
 		Vec3 end = eye.add(dir.scale(RANGE));
@@ -57,15 +70,12 @@ public final class EyeLasersAbility implements Ability {
 		Vec3 actualEnd = entitySearchEnd;
 		if (hit != null) {
 			LivingEntity target = (LivingEntity) hit.getEntity();
-			target.hurt(ModDamageTypes.eyeLaser(level, player), DAMAGE);
+			target.hurt(ModDamageTypes.eyeLaser(level, player), DAMAGE_PER_TICK);
 			actualEnd = hit.getLocation();
+			level.sendParticles(ModParticles.LASER_SPARK,
+					actualEnd.x, actualEnd.y, actualEnd.z,
+					3, 0.10, 0.10, 0.10, 0.04);
 		}
-		level.playSound(null, player.getX(), player.getY(), player.getZ(),
-				SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.6f, 1.8f);
-		level.sendParticles(ModParticles.LASER_SPARK,
-				actualEnd.x, actualEnd.y, actualEnd.z,
-				18, 0.18, 0.18, 0.18, 0.04);
 		ModNetworking.broadcastLaser(player, eye, actualEnd);
-		return true;
 	}
 }
