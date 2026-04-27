@@ -48,7 +48,16 @@ public final class LocalLaserOverlay {
 				level, player, eye, entitySearchEnd, box,
 				e -> e instanceof LivingEntity && e.isAlive() && e != player && !e.isSpectator());
 		Vec3 actualEnd = hit != null ? hit.getLocation() : entitySearchEnd;
-		Vec3 start = eye.add(dir.scale(0.3));
-		BeamRenderer.draw(context, start, actualEnd, 1.0f);
+		Vec3 right = dir.cross(new Vec3(0, 1, 0));
+		if (right.lengthSqr() < 1e-6) {
+			right = new Vec3(1, 0, 0);
+		}
+		right = right.normalize();
+		double eyeSep = 0.11;
+		Vec3 forward = dir.scale(0.35);
+		Vec3 leftEye = eye.add(forward).add(right.scale(-eyeSep));
+		Vec3 rightEye = eye.add(forward).add(right.scale(eyeSep));
+		BeamRenderer.draw(context, leftEye, actualEnd, 1.0f, 0.45f);
+		BeamRenderer.draw(context, rightEye, actualEnd, 1.0f, 0.45f);
 	}
 }

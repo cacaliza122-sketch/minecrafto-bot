@@ -13,6 +13,10 @@ public final class BeamRenderer {
 	}
 
 	public static void draw(WorldRenderContext ctx, Vec3 start, Vec3 end, float intensity) {
+		draw(ctx, start, end, intensity, 1f);
+	}
+
+	public static void draw(WorldRenderContext ctx, Vec3 start, Vec3 end, float intensity, float widthMul) {
 		MultiBufferSource consumers = ctx.consumers();
 		if (consumers == null) {
 			return;
@@ -47,10 +51,11 @@ public final class BeamRenderer {
 		float pulse = 0.92f + 0.08f * (float) Math.sin(t * 0.018);
 		float a = intensity;
 
-		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.22 * pulse, 1f, 0.18f, 0.10f, 0.55f * a);
-		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.13 * pulse, 1f, 0.55f, 0.28f, 0.85f * a);
-		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.06 * pulse, 1f, 0.95f, 0.85f, 1f * a);
-		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.022 * pulse, 1f, 1f, 1f, 1f * a);
+		double wm = pulse * widthMul;
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.22 * wm, 1f, 0.18f, 0.10f, 0.55f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.13 * wm, 1f, 0.55f, 0.28f, 0.85f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.06 * wm, 1f, 0.95f, 0.85f, 1f * a);
+		drawCrossLayer(buf, matrix, start, end, side1, side2, 0.022 * wm, 1f, 1f, 1f, 1f * a);
 
 		ps.popPose();
 	}
