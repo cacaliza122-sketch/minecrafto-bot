@@ -10,13 +10,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public final class MadnessFlightController {
-	private static final double MIN_SPEED_FOR_BREAK = 0.35;
-	private static final int BREAK_RADIUS = 2;
+	private static final double MIN_SPEED_FOR_BREAK = 0.05;
 	private static final float HARDNESS_LIMIT = 20.0f;
+	private static final int CHECKS_PER_TICK = 28;
+	private static final int JITTER_RADIUS = 4;
+	private static final double JAGGED_SPHERE_RADIUS_SQ = 9.0;
+	private static final float SKIP_PROBABILITY = 0.32f;
 
 	private MadnessFlightController() {
 	}
@@ -39,45 +43,53 @@ public final class MadnessFlightController {
 		}
 		Vec3 motion = player.getDeltaMovement();
 		double speedSq = motion.lengthSqr();
-		if (speedSq < MIN_SPEED_FOR_BREAK * MIN_SPEED_FOR_BREAK) {
-			return;
-		}
-		if (!player.horizontalCollision && !player.verticalCollision && !player.minorHorizontalCollision) {
-			return;
-		}
-		Vec3 dir = motion.normalize();
-		Vec3 ahead = player.position().add(0, player.getBbHeight() * 0.5, 0).add(dir.scale(0.6));
-		breakAround(player.serverLevel(), player, BlockPos.containing(ahead));
-	}
-
-	private static void breakAround(ServerLevel level, ServerPlayer player, BlockPos center) {
+		Vec3 dir = speedSq > MIN_SPEED_FOR_BREAK * MIN_SPEED_FOR_BREAK
+				? motion.normalize()
+				: player.getViewVector(1f);
+		ServerLevel level = player.serverLevel();
+		Vec3 head = player.position().add(0, player.getBbHeight() * 0.5, 0);
 		boolean broke = false;
-		for (int dx = -BREAK_RADIUS; dx <= BREAK_RADIUS; dx++) {
-			for (int dy = -BREAK_RADIUS; dy <= BREAK_RADIUS; dy++) {
-				for (int dz = -BREAK_RADIUS; dz <= BREAK_RADIUS; dz++) {
-					if (dx * dx + dy * dy + dz * dz > BREAK_RADIUS * BREAK_RADIUS) {
-						continue;
-					}
-					BlockPos pos = center.offset(dx, dy, dz);
-					BlockState state = level.getBlockState(pos);
-					if (state.isAir() || state.liquid()) {
-						continue;
-					}
-					float hardness = state.getDestroySpeed(level, pos);
-					if (hardness < 0f || hardness >= HARDNESS_LIMIT) {
-						continue;
-					}
-					level.destroyBlock(pos, false, player);
-					broke = true;
-				}
-			}
+		for (int s = 0; s <= 2; s++) {
+			Vec3 ahead = head.add(dir.scale(0.8 + s * 1.2));
+			BlockPos center = BlockPos.containing(ahead);
+			broke |= breakJagged(level, player, center);
 		}
 		if (broke) {
 			level.sendParticles(ParticleTypes.EXPLOSION,
-					center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5,
-					1, 0, 0, 0, 0);
-			level.playSound(null, center, SoundEvents.GENERIC_EXPLODE.value(),
-					SoundSource.PLAYERS, 0.4f, 1.6f);
+					player.getX() + dir.x, player.getY() + 1.0 + dir.y, player.getZ() + dir.z,
+					1, 0.2, 0.2, 0.2, 0.0);
+			if (player.tickCount % 5 == 0) {
+				level.playSound(null, player.getX(), player.getY(), player.getZ(),
+						SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.5f, 1.7f);
+			}
 		}
+	}
+
+	private static boolean breakJagged(ServerLevel level, ServerPlayer player, BlockPos center) {
+		RandomSource rand = level.getRandom();
+		boolean broke = false;
+		for (int i = 0; i < CHECKS_PER_TICK; i++) {
+			int dx = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
+			int dy = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
+			int dz = rand.nextInt(JITTER_RADIUS * 2 + 1) - JITTER_RADIUS;
+			if (dx * dx + dy * dy + dz * dz > JAGGED_SPHERE_RADIUS_SQ) {
+				continue;
+			}
+			if (rand.nextFloat() < SKIP_PROBABILITY) {
+				continue;
+			}
+			BlockPos pos = center.offset(dx, dy, dz);
+			BlockState state = level.getBlockState(pos);
+			if (state.isAir() || state.liquid()) {
+				continue;
+			}
+			float hardness = state.getDestroySpeed(level, pos);
+			if (hardness < 0f || hardness >= HARDNESS_LIMIT) {
+				continue;
+			}
+			level.destroyBlock(pos, false, player);
+			broke = true;
+		}
+		return broke;
 	}
 }

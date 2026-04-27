@@ -79,9 +79,11 @@ public final class ShockwaveUtil {
 				center.x, center.y + 0.1, center.z,
 				30, radius * 0.5, 0.2, radius * 0.5, 0.1);
 		world.playSound(null, center.x, center.y, center.z,
-				SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.6f, 0.6f);
+				SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.4f, 0.5f);
 		world.playSound(null, center.x, center.y, center.z,
-				SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.4f, 0.5f);
+				SoundEvents.WOOL_PLACE, SoundSource.PLAYERS, 1.6f, 0.4f);
+		world.playSound(null, center.x, center.y, center.z,
+				SoundEvents.RAVAGER_STEP, SoundSource.PLAYERS, 1.0f, 0.6f);
 		float baseShake = (float) Math.min(2.5, 0.6 + radius / 4.0);
 		int shakeT = (int) Math.min(40, 14 + radius * 2);
 		for (ServerPlayer nearby : PlayerLookup.around(world, center, 32.0)) {

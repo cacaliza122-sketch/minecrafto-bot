@@ -11,12 +11,13 @@ import net.minecraft.resources.ResourceLocation;
 public final class ResourceBarHud {
 	private static final int X = 12;
 	private static final int Y = 12;
-	private static final int PANEL_WIDTH = 220;
-	private static final int PANEL_HEIGHT = 60;
-	private static final int BAR_WIDTH = 168;
+	private static final int PANEL_WIDTH = 260;
+	private static final int PANEL_HEIGHT = 70;
+	private static final int BAR_WIDTH = 162;
 	private static final int BAR_HEIGHT = 10;
 	private static final int BAR_X_OFFSET = 38;
 	private static final int ICON_SIZE = 18;
+	private static final int VALUE_GAP = 6;
 
 	private static final int SHADOW = 0x66000000;
 	private static final int PANEL_TOP = 0xE0181C2A;
@@ -68,15 +69,15 @@ public final class ResourceBarHud {
 		graphics.drawString(mc.font, heroName, X + 12, Y + 6, HERO_NAME_COLOR, true);
 		graphics.fill(X + 12, Y + 18, X + PANEL_WIDTH - 12, Y + 19, 0x33FFD27A);
 
-		int row1Y = Y + 24;
-		int row2Y = Y + 40;
+		int row1Y = Y + 26;
+		int row2Y = Y + 48;
 		drawIcon(graphics, X + 12, row1Y - 4, ENERGY_ICON, "E");
 		drawBar(graphics, mc, X + BAR_X_OFFSET, row1Y, energyPct, ENERGY_DARK, ENERGY_BRIGHT, ENERGY_GLOW);
-		drawValue(graphics, mc, X + BAR_X_OFFSET + BAR_WIDTH + 4, row1Y - 1, energy, energyMax);
+		drawValue(graphics, mc, X + BAR_X_OFFSET + BAR_WIDTH + VALUE_GAP, row1Y - 1, energy, energyMax);
 
 		drawIcon(graphics, X + 12, row2Y - 4, MANA_ICON, "M");
 		drawBar(graphics, mc, X + BAR_X_OFFSET, row2Y, manaPct, MANA_DARK, MANA_BRIGHT, MANA_GLOW);
-		drawValue(graphics, mc, X + BAR_X_OFFSET + BAR_WIDTH + 4, row2Y - 1, mana, manaMax);
+		drawValue(graphics, mc, X + BAR_X_OFFSET + BAR_WIDTH + VALUE_GAP, row2Y - 1, mana, manaMax);
 	}
 
 	private static void drawIcon(GuiGraphics g, int x, int y, int color, String letter) {
