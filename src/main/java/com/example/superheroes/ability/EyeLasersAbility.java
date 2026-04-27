@@ -10,8 +10,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class EyeLasersAbility implements Ability {
@@ -43,12 +46,15 @@ public final class EyeLasersAbility implements Ability {
 		Vec3 eye = player.getEyePosition();
 		Vec3 dir = player.getViewVector(1f);
 		Vec3 end = eye.add(dir.scale(RANGE));
+		ServerLevel level = player.serverLevel();
+		BlockHitResult blockHit = level.clip(new ClipContext(
+				eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+		Vec3 entitySearchEnd = blockHit.getType() == HitResult.Type.BLOCK ? blockHit.getLocation() : end;
 		AABB box = player.getBoundingBox().expandTowards(dir.scale(RANGE)).inflate(1.0);
 		EntityHitResult hit = ProjectileUtil.getEntityHitResult(
-				player.level(), player, eye, end, box,
+				level, player, eye, entitySearchEnd, box,
 				e -> e instanceof LivingEntity && e.isAlive() && e != player && !e.isSpectator());
-		Vec3 actualEnd = end;
-		ServerLevel level = player.serverLevel();
+		Vec3 actualEnd = entitySearchEnd;
 		if (hit != null) {
 			LivingEntity target = (LivingEntity) hit.getEntity();
 			target.hurt(ModDamageTypes.eyeLaser(level, player), DAMAGE);
