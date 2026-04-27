@@ -17,6 +17,11 @@ public final class ModItems {
 			new CompoundVItem(new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON))
 	);
 
+	public static final MilkBottleItem MILK_BOTTLE = register(
+			"milk_bottle",
+			new MilkBottleItem(new Item.Properties().stacksTo(8).rarity(Rarity.RARE))
+	);
+
 	private ModItems() {
 	}
 

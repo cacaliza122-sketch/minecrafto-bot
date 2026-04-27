@@ -2,11 +2,13 @@ package com.example.superheroes.ability;
 
 import com.example.superheroes.attachment.ModAttachments;
 import com.example.superheroes.damage.ModDamageTypes;
+import com.example.superheroes.effect.ModEffects;
 import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
 import com.example.superheroes.particle.ModParticles;
 import com.example.superheroes.transform.HeroData;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,6 +17,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseFireBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -25,6 +30,7 @@ public final class EyeLasersAbility implements Ability {
 	private static final double RANGE = 64.0;
 	private static final float MIN_DPS = 4.0f;
 	private static final float MAX_DPS = 12.0f;
+	private static final float MADNESS_DAMAGE_MUL = 3.0f;
 
 	@Override
 	public ResourceLocation getId() {
@@ -69,6 +75,7 @@ public final class EyeLasersAbility implements Ability {
 		Vec3 dir = player.getViewVector(1f);
 		Vec3 end = eye.add(dir.scale(RANGE));
 		ServerLevel level = player.serverLevel();
+		boolean madness = ModEffects.isMadness(player);
 		BlockHitResult blockHit = level.clip(new ClipContext(
 				eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
 		Vec3 entitySearchEnd = blockHit.getType() == HitResult.Type.BLOCK ? blockHit.getLocation() : end;
@@ -77,13 +84,25 @@ public final class EyeLasersAbility implements Ability {
 				level, player, eye, entitySearchEnd, box,
 				e -> e instanceof LivingEntity && e.isAlive() && e != player && !e.isSpectator());
 		Vec3 actualEnd = entitySearchEnd;
+		float damage = damagePerTick(player) * (madness ? MADNESS_DAMAGE_MUL : 1f);
 		if (hit != null) {
 			LivingEntity target = (LivingEntity) hit.getEntity();
-			target.hurt(ModDamageTypes.eyeLaser(level, player), damagePerTick(player));
+			target.hurt(ModDamageTypes.eyeLaser(level, player), damage);
 			actualEnd = hit.getLocation();
 			level.sendParticles(ModParticles.LASER_SPARK,
 					actualEnd.x, actualEnd.y, actualEnd.z,
 					3, 0.10, 0.10, 0.10, 0.04);
+			if (madness && player.tickCount % 8 == 0) {
+				level.explode(player, actualEnd.x, actualEnd.y, actualEnd.z,
+						1.2f, false, Level.ExplosionInteraction.NONE);
+				target.igniteForSeconds(4f);
+			}
+		} else if (madness && blockHit.getType() == HitResult.Type.BLOCK && player.tickCount % 6 == 0) {
+			BlockPos hitPos = blockHit.getBlockPos();
+			BlockPos firePos = hitPos.relative(blockHit.getDirection());
+			if (level.getBlockState(firePos).isAir() && BaseFireBlock.canBePlacedAt(level, firePos, blockHit.getDirection())) {
+				level.setBlockAndUpdate(firePos, Blocks.FIRE.defaultBlockState());
+			}
 		}
 		ModNetworking.broadcastLaser(player, eye, actualEnd);
 	}

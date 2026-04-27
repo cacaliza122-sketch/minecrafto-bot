@@ -20,6 +20,7 @@ public final class ModItemGroups {
 			.displayItems((params, output) -> {
 				output.accept(ModItems.HOMELANDER_SUIT);
 				output.accept(ModItems.COMPOUND_V);
+				output.accept(ModItems.MILK_BOTTLE);
 			})
 			.build();
 
