@@ -51,7 +51,6 @@ public final class ModNetworking {
 
 	public static void broadcastLaser(ServerPlayer shooter, Vec3 start, Vec3 end) {
 		LaserFiredS2CPayload payload = new LaserFiredS2CPayload(shooter.getUUID(), start, end);
-		ServerPlayNetworking.send(shooter, payload);
 		for (ServerPlayer observer : PlayerLookup.tracking(shooter)) {
 			if (observer != shooter) {
 				ServerPlayNetworking.send(observer, payload);
