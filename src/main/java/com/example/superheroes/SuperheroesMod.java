@@ -3,6 +3,7 @@ package com.example.superheroes;
 import com.example.superheroes.ability.AbilityRegistry;
 import com.example.superheroes.attachment.ModAttachments;
 import com.example.superheroes.command.SuperheroesCommands;
+import com.example.superheroes.effect.ModEffects;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.item.ModItemGroups;
 import com.example.superheroes.item.ModItems;
@@ -23,6 +24,7 @@ public class SuperheroesMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModAttachments.init();
+		ModEffects.init();
 		Heroes.init();
 		AbilityRegistry.init();
 		ModItems.init();
@@ -30,6 +32,7 @@ public class SuperheroesMod implements ModInitializer {
 		ModParticles.init();
 		ModNetworking.init();
 		ResourceController.init();
+		com.example.superheroes.effect.MadnessFlightController.init();
 		SuperheroesCommands.init();
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

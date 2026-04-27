@@ -2,6 +2,7 @@ package com.example.superheroes.client.mixin;
 
 import com.example.superheroes.ability.AbilityIds;
 import com.example.superheroes.client.ClientHeroState;
+import com.example.superheroes.effect.ModEffects;
 import com.example.superheroes.transform.HeroData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,6 +19,7 @@ public abstract class LocalPlayerFlightMixin {
 	private static final double MAX_VERTICAL_SPEED = 1.0;
 	private static final double ACCEL = 0.12;
 	private static final double MIN_SPEED_MUL = 0.5;
+	private static final double MADNESS_SPEED_MUL = 1.5;
 	private static final double FRICTION_HORIZONTAL = 0.92;
 	private static final double FRICTION_VERTICAL = 0.90;
 
@@ -39,6 +41,9 @@ public abstract class LocalPlayerFlightMixin {
 		} else {
 			double frac = Math.max(0f, Math.min(1f, heroData.energy() / energyMax));
 			speedMul = MIN_SPEED_MUL + (1.0 - MIN_SPEED_MUL) * frac;
+		}
+		if (ModEffects.isMadness(player)) {
+			speedMul *= MADNESS_SPEED_MUL;
 		}
 		double maxHorizontal = MAX_HORIZONTAL_SPEED * speedMul;
 		double maxVertical = MAX_VERTICAL_SPEED * speedMul;
@@ -111,10 +116,8 @@ public abstract class LocalPlayerFlightMixin {
 			my *= FRICTION_VERTICAL;
 		}
 
-		Vec3 newMotion = new Vec3(mx, my, mz);
-		self.setDeltaMovement(newMotion);
-		self.move(MoverType.SELF, newMotion);
-		self.fallDistance = 0f;
+		self.setDeltaMovement(mx, my, mz);
+		self.move(MoverType.SELF, self.getDeltaMovement());
 		ci.cancel();
 	}
 }
