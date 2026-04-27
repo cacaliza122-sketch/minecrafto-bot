@@ -33,6 +33,7 @@ public class SuperheroesMod implements ModInitializer {
 		ModNetworking.init();
 		ResourceController.init();
 		com.example.superheroes.effect.MadnessFlightController.init();
+		com.example.superheroes.effect.MadnessAftermathController.init();
 		SuperheroesCommands.init();
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

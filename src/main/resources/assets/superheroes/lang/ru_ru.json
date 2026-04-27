@@ -14,6 +14,7 @@
 	"item.superheroes.milk_bottle.lore.warning": "Даёт «Безумие» на 15 секунд.",
 	"item.superheroes.milk_bottle.not_homelander": "Нечего тут пить.",
 	"effect.superheroes.madness": "Безумие",
+	"effect.superheroes.madness_aftermath": "Откат безумия",
 	"key.categories.superheroes": "Супергерои",
 	"key.superheroes.radial": "Меню способностей",
 	"key.superheroes.bindings": "Привязки ресурсов",

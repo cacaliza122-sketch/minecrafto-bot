@@ -1,6 +1,7 @@
 package com.example.superheroes.ability;
 
 import com.example.superheroes.attachment.ModAttachments;
+import com.example.superheroes.effect.ModEffects;
 import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
@@ -15,6 +16,9 @@ public final class AbilityRouter {
 	}
 
 	public static void activate(ServerPlayer player, ResourceLocation abilityId) {
+		if (ModEffects.isAftermath(player)) {
+			return;
+		}
 		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
 		if (!data.hasHero()) {
 			return;

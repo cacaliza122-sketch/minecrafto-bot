@@ -3,6 +3,7 @@ package com.example.superheroes.resource;
 import com.example.superheroes.ability.Ability;
 import com.example.superheroes.ability.AbilityRegistry;
 import com.example.superheroes.attachment.ModAttachments;
+import com.example.superheroes.effect.ModEffects;
 import com.example.superheroes.hero.Hero;
 import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
@@ -44,12 +45,13 @@ public final class ResourceController {
 		}
 		Set<ResourceLocation> active = new HashSet<>(data.activeAbilities());
 		Set<ResourceLocation> toDeactivate = new HashSet<>();
+		boolean madness = ModEffects.isMadness(player);
 		for (ResourceLocation abilityId : active) {
 			Ability ability = AbilityRegistry.get(abilityId);
 			if (ability == null) {
 				continue;
 			}
-			float cost = ability.costPerTick();
+			float cost = madness ? 0f : ability.costPerTick();
 			if (cost > 0f) {
 				ResourceKind kind = data.binding(abilityId, hero.getDefaultBinding(abilityId));
 				ConsumeResult cr = consume(energy, mana, kind, cost);
@@ -81,6 +83,9 @@ public final class ResourceController {
 
 	public static boolean tryConsume(ServerPlayer player, ResourceLocation abilityId, float amount) {
 		if (amount <= 0f) {
+			return true;
+		}
+		if (ModEffects.isMadness(player)) {
 			return true;
 		}
 		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
