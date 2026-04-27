@@ -4,6 +4,7 @@ import com.example.superheroes.client.hud.RadialMenuHud;
 import com.example.superheroes.client.hud.ResourceBarHud;
 import com.example.superheroes.client.hud.LowResourceVignetteHud;
 import com.example.superheroes.client.hud.ScreenFlashHud;
+import com.example.superheroes.client.hud.SunWindupHud;
 import com.example.superheroes.client.fx.ScreenShakeManager;
 import com.example.superheroes.client.network.ClientNetworking;
 import com.example.superheroes.client.render.HeroSkinLayer;
@@ -45,6 +46,7 @@ public class SuperheroesClient implements ClientModInitializer {
 			ResourceBarHud.render(graphics, tracker);
 			RadialMenuHud.render(graphics, tracker);
 			ScreenFlashHud.render(graphics, tracker);
+			SunWindupHud.render(graphics, tracker);
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {

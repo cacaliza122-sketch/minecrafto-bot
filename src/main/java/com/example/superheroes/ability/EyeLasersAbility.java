@@ -93,19 +93,44 @@ public final class EyeLasersAbility implements Ability {
 			level.sendParticles(ModParticles.LASER_SPARK,
 					actualEnd.x, actualEnd.y, actualEnd.z,
 					3, 0.10, 0.10, 0.10, 0.04);
-			if (madness && player.tickCount % 8 == 0) {
+			if (madness) {
+				if (player.tickCount % 2 == 0) {
+					level.explode(player, actualEnd.x, actualEnd.y, actualEnd.z,
+							2.4f, true, Level.ExplosionInteraction.MOB);
+					target.igniteForSeconds(8f);
+				}
+				placeFireRing(level, actualEnd, 3);
+			}
+		} else if (madness && blockHit.getType() == HitResult.Type.BLOCK) {
+			if (player.tickCount % 2 == 0) {
 				level.explode(player, actualEnd.x, actualEnd.y, actualEnd.z,
-						1.2f, false, Level.ExplosionInteraction.NONE);
-				target.igniteForSeconds(4f);
+						2.0f, true, Level.ExplosionInteraction.MOB);
 			}
-		} else if (madness && blockHit.getType() == HitResult.Type.BLOCK && player.tickCount % 6 == 0) {
-			BlockPos hitPos = blockHit.getBlockPos();
-			BlockPos firePos = hitPos.relative(blockHit.getDirection());
-			if (level.getBlockState(firePos).isAir() && BaseFireBlock.canBePlacedAt(level, firePos, blockHit.getDirection())) {
-				level.setBlockAndUpdate(firePos, Blocks.FIRE.defaultBlockState());
-			}
+			placeFireRing(level, actualEnd, 3);
 		}
 		ModNetworking.broadcastLaser(player, eye, actualEnd);
+	}
+
+	private static void placeFireRing(ServerLevel level, Vec3 center, int radius) {
+		BlockPos centerPos = BlockPos.containing(center);
+		for (int dx = -radius; dx <= radius; dx++) {
+			for (int dz = -radius; dz <= radius; dz++) {
+				if (dx * dx + dz * dz > radius * radius) {
+					continue;
+				}
+				for (int dy = -1; dy <= 1; dy++) {
+					BlockPos pos = centerPos.offset(dx, dy, dz);
+					if (!level.getBlockState(pos).isAir()) {
+						continue;
+					}
+					BlockPos below = pos.below();
+					if (BaseFireBlock.canBePlacedAt(level, pos, net.minecraft.core.Direction.UP)
+							&& !level.getBlockState(below).isAir()) {
+						level.setBlockAndUpdate(pos, Blocks.FIRE.defaultBlockState());
+					}
+				}
+			}
+		}
 	}
 
 	private static float damagePerTick(ServerPlayer player) {

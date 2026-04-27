@@ -14,6 +14,7 @@
 	"item.superheroes.milk_bottle.lore.warning": "Grants Madness for 15 seconds.",
 	"item.superheroes.milk_bottle.not_homelander": "You can't drink this.",
 	"effect.superheroes.madness": "Madness",
+	"effect.superheroes.madness_aftermath": "Madness Aftermath",
 	"key.categories.superheroes": "Superheroes",
 	"key.superheroes.radial": "Open Ability Wheel",
 	"key.superheroes.bindings": "Resource Bindings",

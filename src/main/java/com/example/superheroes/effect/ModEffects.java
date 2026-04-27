@@ -13,6 +13,11 @@ public final class ModEffects {
 			new MadnessMobEffect(MobEffectCategory.HARMFUL, 0xFF1F2D)
 	);
 
+	public static final Holder<MobEffect> MADNESS_AFTERMATH = Registry.registerForHolder(
+			BuiltInRegistries.MOB_EFFECT, ModId.of("madness_aftermath"),
+			new MadnessAftermathMobEffect(MobEffectCategory.NEUTRAL, 0xFFE680)
+	);
+
 	private ModEffects() {
 	}
 
@@ -21,5 +26,9 @@ public final class ModEffects {
 
 	public static boolean isMadness(net.minecraft.world.entity.LivingEntity entity) {
 		return entity != null && entity.hasEffect(MADNESS);
+	}
+
+	public static boolean isAftermath(net.minecraft.world.entity.LivingEntity entity) {
+		return entity != null && entity.hasEffect(MADNESS_AFTERMATH);
 	}
 }

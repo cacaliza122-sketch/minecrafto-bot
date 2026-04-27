@@ -2,6 +2,7 @@ package com.example.superheroes.client.render;
 
 import com.example.superheroes.ability.AbilityIds;
 import com.example.superheroes.client.ClientHeroState;
+import com.example.superheroes.effect.ModEffects;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
@@ -63,7 +64,9 @@ public final class LocalLaserOverlay {
 		Vec3 forward = dir.scale(0.35);
 		Vec3 leftEye = eye.add(forward).add(right.scale(-eyeSep));
 		Vec3 rightEye = eye.add(forward).add(right.scale(eyeSep));
-		BeamRenderer.draw(context, leftEye, actualEnd, 1.0f, 0.45f);
-		BeamRenderer.draw(context, rightEye, actualEnd, 1.0f, 0.45f);
+		float widthMul = ModEffects.isMadness(player) ? 1.1f : 0.45f;
+		float intensity = ModEffects.isMadness(player) ? 1.3f : 1.0f;
+		BeamRenderer.draw(context, leftEye, actualEnd, intensity, widthMul);
+		BeamRenderer.draw(context, rightEye, actualEnd, intensity, widthMul);
 	}
 }
