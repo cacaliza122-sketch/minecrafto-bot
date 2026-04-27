@@ -1,14 +1,17 @@
 package com.example.superheroes.client.hud;
 
+import com.example.superheroes.ModId;
 import com.example.superheroes.client.ClientHeroState;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 
 public final class LowResourceVignetteHud {
 	private static final float WARN_THRESHOLD = 0.25f;
 	private static final float CRITICAL_THRESHOLD = 0.10f;
-	private static final int VIGNETTE_THICKNESS = 80;
+	private static final ResourceLocation VIGNETTE = ModId.of("textures/gui/vignette.png");
 
 	private LowResourceVignetteHud() {
 	}
@@ -27,22 +30,17 @@ public final class LowResourceVignetteHud {
 		}
 		float intensity = 1f - (worst / WARN_THRESHOLD);
 		boolean critical = worst < CRITICAL_THRESHOLD;
-		float pulse = critical ? (0.6f + 0.4f * (float) Math.abs(Math.sin(System.currentTimeMillis() / 180.0))) : 1f;
-		int baseAlpha = (int) (140f * intensity * pulse);
-		baseAlpha = Math.max(0, Math.min(200, baseAlpha));
-		int color = critical ? 0xFF4655 : 0xF2D16B;
-		int packed = (baseAlpha << 24) | color;
+		float pulse = critical ? (0.65f + 0.35f * (float) Math.abs(Math.sin(System.currentTimeMillis() / 180.0))) : 1f;
+		float alpha = Math.min(1f, intensity * pulse * 0.85f);
 		Minecraft mc = Minecraft.getInstance();
 		int w = mc.getWindow().getGuiScaledWidth();
 		int h = mc.getWindow().getGuiScaledHeight();
-		drawVignetteEdges(graphics, w, h, packed);
-	}
-
-	private static void drawVignetteEdges(GuiGraphics graphics, int w, int h, int color) {
-		int transparent = color & 0x00FFFFFF;
-		graphics.fillGradient(0, 0, w, VIGNETTE_THICKNESS, color, transparent);
-		graphics.fillGradient(0, h - VIGNETTE_THICKNESS, w, h, transparent, color);
-		graphics.fillGradient(0, 0, VIGNETTE_THICKNESS, h, color, transparent);
-		graphics.fillGradient(w - VIGNETTE_THICKNESS, 0, w, h, transparent, color);
+		float r = critical ? 1.00f : 0.95f;
+		float g = critical ? 0.27f : 0.82f;
+		float b = critical ? 0.33f : 0.42f;
+		RenderSystem.enableBlend();
+		RenderSystem.setShaderColor(r, g, b, alpha);
+		graphics.blit(VIGNETTE, 0, 0, 0f, 0f, w, h, w, h);
+		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 	}
 }
