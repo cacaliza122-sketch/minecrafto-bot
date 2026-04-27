@@ -1,8 +1,12 @@
 package com.example.superheroes.ability;
 
+import com.example.superheroes.attachment.ModAttachments;
 import com.example.superheroes.damage.ModDamageTypes;
+import com.example.superheroes.hero.Hero;
+import com.example.superheroes.hero.Heroes;
 import com.example.superheroes.network.ModNetworking;
 import com.example.superheroes.particle.ModParticles;
+import com.example.superheroes.transform.HeroData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,7 +23,8 @@ import net.minecraft.world.phys.Vec3;
 
 public final class EyeLasersAbility implements Ability {
 	private static final double RANGE = 64.0;
-	private static final float DAMAGE_PER_TICK = 0.5f;
+	private static final float MIN_DPS = 4.0f;
+	private static final float MAX_DPS = 12.0f;
 
 	@Override
 	public ResourceLocation getId() {
@@ -74,12 +79,25 @@ public final class EyeLasersAbility implements Ability {
 		Vec3 actualEnd = entitySearchEnd;
 		if (hit != null) {
 			LivingEntity target = (LivingEntity) hit.getEntity();
-			target.hurt(ModDamageTypes.eyeLaser(level, player), DAMAGE_PER_TICK);
+			target.hurt(ModDamageTypes.eyeLaser(level, player), damagePerTick(player));
 			actualEnd = hit.getLocation();
 			level.sendParticles(ModParticles.LASER_SPARK,
 					actualEnd.x, actualEnd.y, actualEnd.z,
 					3, 0.10, 0.10, 0.10, 0.04);
 		}
 		ModNetworking.broadcastLaser(player, eye, actualEnd);
+	}
+
+	private static float damagePerTick(ServerPlayer player) {
+		HeroData data = player.getAttachedOrCreate(ModAttachments.HERO_DATA);
+		float frac = 0f;
+		if (data.hasHero()) {
+			Hero hero = Heroes.get(data.heroId());
+			if (hero != null && hero.getManaMax() > 0f) {
+				frac = Math.max(0f, Math.min(1f, data.mana() / hero.getManaMax()));
+			}
+		}
+		float dps = MIN_DPS + (MAX_DPS - MIN_DPS) * frac;
+		return dps / 20f;
 	}
 }
